@@ -4,9 +4,19 @@ A self-contained browser app for recording player evaluations in any season. Dat
 
 Features include a mobile-friendly sprint stopwatch with separate Home-to-1B and Home-to-2B attempt histories, automatic best-time tracking, and a ball/strike pitch counter with undo and reset controls.
 
+The Game Review tab imports a one-game defensive script from CSV and records event-based defensive observations, including routine-out opportunities, one primary missed-out cause, extra advances, coverage mistakes, and excellent plays. It includes editable game logs, current-game team and player ROC summaries, in-game position overrides, local autosave, JSON backup/restore, and a game-events CSV export.
+
+The defense CSV columns are `Date`, `Number`, `Player First`, `Player Last`, and innings `1` through `7`. Blank player rows are ignored; `X` means the player is sitting that inning.
+
 ## Run locally
 
 Open `index.html` in a browser, or serve this directory with any static web server.
+
+Run the Game Review calculation tests with:
+
+```sh
+node game-review-core.test.js
+```
 
 ## Publish with GitHub Pages
 

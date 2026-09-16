@@ -79,6 +79,9 @@
     }
     textarea{min-height:90px;resize:vertical}
     .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
+    .app-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 12px}
+    .app-tab{min-height:48px;border:1px solid var(--border);border-radius:11px;background:var(--chip);color:var(--text);font-weight:900}
+    .app-tab.active{background:var(--accent);color:#fff;border-color:transparent}
     .tab{
       min-height:52px;border-radius:11px;border:1px solid var(--border);background:var(--chip);
       color:var(--text);font-weight:850;font-size:13px;padding:5px;
@@ -165,6 +168,35 @@
     .backup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .file-input{display:none}
     .small{font-size:12px}
+    .game-meta{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:9px;align-items:end}
+    .review-context{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .review-roster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .review-player{min-height:66px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);padding:8px;font-weight:900;text-align:left}
+    .review-player span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+    .summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}
+    .summary-card{border:1px solid var(--border);background:var(--chip);border-radius:11px;padding:9px;text-align:center}
+    .summary-card strong{display:block;font-size:23px;font-variant-numeric:tabular-nums}
+    .summary-card span{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase}
+    .breakdown{display:flex;flex-wrap:wrap;gap:6px}
+    .breakdown span{border:1px solid var(--border);border-radius:999px;padding:5px 8px;font-size:12px;font-weight:800}
+    .filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .review-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+    .review-table th,.review-table td{border-bottom:1px solid var(--border);padding:8px 7px;text-align:left}
+    .review-table th{color:var(--muted);font-size:10px;text-transform:uppercase}
+    .event-list{display:grid;gap:8px}
+    .event-row{border:1px solid var(--border);border-radius:11px;padding:10px;background:var(--chip)}
+    .event-main{font-weight:850;line-height:1.35}.event-note{margin-top:4px;color:var(--muted);font-size:13px}
+    .event-actions{display:flex;gap:7px;margin-top:8px}.event-actions .btn{min-height:38px;padding:6px 11px}
+    .sheet-backdrop{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+    .event-sheet{width:min(680px,100%);max-height:92vh;overflow:auto;background:var(--card);border-radius:18px 18px 0 0;padding:16px max(14px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));box-shadow:0 -10px 30px rgba(0,0,0,.2)}
+    .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .event-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+    .event-button{min-height:56px;border:1px solid var(--border);border-radius:11px;background:var(--chip);color:var(--text);padding:8px;font-weight:900}
+    .event-button.positive{background:var(--accent-soft);border-color:transparent}.event-button.missed{border-left:5px solid #c88a36}
+    .event-button.on{box-shadow:0 0 0 3px var(--accent);border-color:var(--accent)}
+    .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:12px}
+    .legend-grid strong{color:var(--accent)}
     @media(max-width:560px){
       .app{padding:10px 10px 30px}
       .identity{grid-template-columns:74px minmax(0,1fr) 66px}
@@ -176,6 +208,11 @@
       .roster-row{grid-template-columns:62px minmax(0,1fr) 58px}
       .evaluation-meta{align-items:stretch;flex-direction:column}
       .evaluation-meta .date-field{width:100%}
+      .game-meta,.filter-grid{grid-template-columns:1fr 1fr}
+      .review-roster{grid-template-columns:1fr 1fr}
+      .summary-cards{grid-template-columns:1fr 1fr}
+      .event-buttons{grid-template-columns:1fr}
+      .legend-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -208,6 +245,7 @@
       <div class="section-sub">CSV is best for Excel. JSON preserves the full app state for restoring later.</div>
       <div class="backup-grid">
         <button class="btn primary" id="exportCsv" type="button">Share / Export CSV</button>
+        <button class="btn" id="exportReviewCsv" type="button">Export Game Events CSV</button>
         <button class="btn" id="exportJson" type="button">Share / Save Backup</button>
         <button class="btn" id="importJsonBtn" type="button">Restore Backup</button>
         <button class="btn" id="closeBackup" type="button">Done</button>
@@ -215,6 +253,11 @@
       <input id="importJson" class="file-input" type="file" accept=".json,application/json">
       <div id="backupStatus" class="notice hidden"></div>
     </section>
+
+    <nav class="app-tabs" aria-label="Main views">
+      <button type="button" class="app-tab active" data-view="evaluation">Player Evaluation</button>
+      <button type="button" class="app-tab" data-view="gameReview">Game Review</button>
+    </nav>
 
     <section id="evaluationView">
       <div class="card evaluation-meta">
@@ -351,8 +394,85 @@
       </div>
       <div id="status" class="status" aria-live="polite"></div>
     </section>
+
+    <section id="gameReviewView" class="hidden">
+      <div class="card">
+        <div class="section-title">Game Review</div>
+        <div class="section-sub">Import the defensive script, then log coaching observations in two taps. Every event autosaves on this device.</div>
+        <div class="game-meta">
+          <div><label for="gameDate">Date</label><input id="gameDate" type="date"></div>
+          <button class="btn primary" id="importDefenseBtn" type="button">Import Defense CSV</button>
+        </div>
+        <input id="importDefenseCsv" class="file-input" type="file" accept=".csv,text/csv">
+        <div id="defenseImportStatus" class="notice hidden"></div>
+      </div>
+
+      <div class="card">
+        <div class="review-context">
+          <div><label for="reviewInning">Current inning</label><select id="reviewInning"></select></div>
+          <div><label for="reviewPitcher">Current pitcher (optional)</label><select id="reviewPitcher"></select></div>
+        </div>
+        <div class="group-title">Tap a player</div>
+        <div class="section-sub">The position shown is the assignment for this inning. Tap a player to change it when the game changes.</div>
+        <div id="reviewRoster" class="review-roster"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Team Summary</div>
+        <div id="teamSummary"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Player Summary</div>
+        <div class="section-sub">Current game only. Percentages are raw values and do not imply a meaningful sample size.</div>
+        <div class="table-scroll"><table class="review-table">
+          <thead><tr><th>Player</th><th>Pos</th><th>RO</th><th>Converted</th><th>MRO-F</th><th>MRO-D</th><th>MRO-T</th><th>MRO-R</th><th>MRO-1B</th><th>XA</th><th>COV</th><th>PLUS</th><th>ROC %</th></tr></thead>
+          <tbody id="playerSummaryBody"></tbody>
+        </table></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Event Log</div>
+        <div class="section-sub">Newest events appear first. Use Edit to correct the inning, position, type, or note.</div>
+        <div id="eventLog" class="event-list"></div>
+      </div>
+
+      <details class="card">
+        <summary class="section-title">Codes & Definitions</summary>
+        <div class="legend-grid" style="margin-top:12px">
+          <div><strong>RO</strong> — Routine out opportunity converted.</div>
+          <div><strong>MRO-F</strong> — Missed routine out: fielding.</div>
+          <div><strong>MRO-D</strong> — Missed routine out: decision or hesitation.</div>
+          <div><strong>MRO-T</strong> — Missed routine out: throw.</div>
+          <div><strong>MRO-R</strong> — Missed routine out: range or positioning.</div>
+          <div><strong>MRO-1B</strong> — Missed routine out: first-base reception.</div>
+          <div><strong>XA</strong> — Extra advance allowed.</div>
+          <div><strong>COV</strong> — Coverage, backup, or cutoff mistake.</div>
+          <div><strong>PLUS</strong> — Excellent or above-routine play.</div>
+        </div>
+      </details>
+      <div id="reviewStatus" class="status" aria-live="polite"></div>
+    </section>
   </main>
 
+  <div id="eventSheetBackdrop" class="sheet-backdrop hidden">
+    <section class="event-sheet" role="dialog" aria-modal="true" aria-labelledby="eventSheetTitle">
+      <div class="sheet-head"><div><div id="eventSheetTitle" class="section-title">Log Event</div><div id="eventPlayerLabel" class="muted"></div></div><button type="button" class="btn" id="closeEventSheet">Close</button></div>
+      <div class="review-context">
+        <div><label for="eventInning">Inning</label><select id="eventInning"></select></div>
+        <div><label for="eventPosition">Position</label><select id="eventPosition"></select></div>
+      </div>
+      <div style="margin-top:9px"><label for="eventNote">Optional short note</label><input id="eventNote" maxlength="120" placeholder="double clutch, late throw to 1B"></div>
+      <div id="eventButtons" class="event-buttons"></div>
+      <div class="toolbar">
+        <button type="button" class="btn primary hidden" id="saveEventEdit">Save Changes</button>
+        <button type="button" class="btn" id="updatePositionOnly">Update Position Only</button>
+      </div>
+      <div class="notice">A missed-out button records one RO plus exactly one primary MRO cause. XA, COV, and PLUS do not add an RO.</div>
+    </section>
+  </div>
+
+<script src="game-review-core.js"></script>
 <script>
 (()=>{
   const STORAGE_KEY='fallBallEvaluator.v1';
@@ -362,6 +482,12 @@
   const confidence=['Uncomfortable','Developing','Comfortable','Confident'];
   const years=['0','1','2','3','4','5+'];
   const ratingNames=['','Beginner','Developing','Competent','Strong','Standout'];
+  const innings=Array.from({length:12},(_,i)=>String(i+1));
+  const reviewEventLabels={
+    RO:'Routine Out Made','MRO-F':'Missed Out: Fielding','MRO-D':'Missed Out: Decision',
+    'MRO-T':'Missed Out: Throw','MRO-R':'Missed Out: Range','MRO-1B':'Missed Out: 1B Reception',
+    XA:'Extra Advance',COV:'Coverage Mistake',PLUS:'Excellent Play'
+  };
 
   function todayLocalISO(){
     const today=new Date();
@@ -375,6 +501,14 @@
     return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));
   }
 
+  function makeId(prefix){
+    return prefix+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
+  }
+
+  function blankGame(){
+    return {id:makeId('game'),date:todayLocalISO(),events:[],lastPositions:{},lineupByInning:{},activePlayerIds:[]};
+  }
+
   const blankPlayer=()=>({
     jersey:'',name:'',age:'',throws:'',bats:'',years:'',pastPositions:[],wantPositions:[],
     pitchingExperience:'',catchingExperience:'',home1:'',home2:'',home1Attempts:[],home2Attempts:[],athleticism:0,
@@ -383,7 +517,47 @@
   });
 
   function defaultState(){
-    return {version:5,evaluationDate:todayLocalISO(),current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+    const game=blankGame();
+    return {version:6,evaluationDate:todayLocalISO(),current:0,activeTab:'background',appView:'evaluation',players:Array.from({length:12},blankPlayer),gameReviews:[game],currentGameId:game.id};
+  }
+
+  function sanitizeEvent(raw={}){
+    const playerId=/^p(?:[0-9]|1[01])$/.test(String(raw.playerId||''))?String(raw.playerId):'';
+    const eventType=GameReviewCore.EVENT_TYPES.includes(raw.eventType)?raw.eventType:'';
+    if(!playerId||!eventType)return null;
+    return {
+      id:String(raw.id||makeId('event')),gameId:String(raw.gameId||''),playerId,
+      inning:innings.includes(String(raw.inning))?String(raw.inning):'1',
+      position:positions.includes(raw.position)?raw.position:'',category:'defense',eventType,
+      note:String(raw.note||'').slice(0,120),pitcherId:/^p(?:[0-9]|1[01])$/.test(String(raw.pitcherId||''))?String(raw.pitcherId):'',
+      createdAt:Number(raw.createdAt)||Date.now()
+    };
+  }
+
+  function sanitizeGame(raw={}){
+    const game={id:String(raw.id||makeId('game')),date:validDate(raw.date)?raw.date:todayLocalISO(),events:[],lastPositions:{},lineupByInning:{},activePlayerIds:[]};
+    game.events=(Array.isArray(raw.events)?raw.events:[]).map(sanitizeEvent).filter(Boolean).map(event=>Object.assign(event,{gameId:game.id}));
+    if(raw.lastPositions&&typeof raw.lastPositions==='object'){
+      Object.keys(raw.lastPositions).forEach(playerId=>{if(/^p(?:[0-9]|1[01])$/.test(playerId)&&positions.includes(raw.lastPositions[playerId]))game.lastPositions[playerId]=raw.lastPositions[playerId];});
+    }
+    if(raw.lineupByInning&&typeof raw.lineupByInning==='object'){
+      innings.forEach(inning=>{
+        const assignments=raw.lineupByInning[inning];if(!assignments||typeof assignments!=='object')return;
+        game.lineupByInning[inning]={};
+        Object.keys(assignments).forEach(playerId=>{
+          const value=String(assignments[playerId]||'').toUpperCase();
+          if(/^p(?:[0-9]|1[01])$/.test(playerId)&&(positions.includes(value)||value==='X'))game.lineupByInning[inning][playerId]=value;
+        });
+      });
+    }
+    if(Array.isArray(raw.activePlayerIds))game.activePlayerIds=raw.activePlayerIds.filter(playerId=>/^p(?:[0-9]|1[01])$/.test(playerId)).slice(0,12);
+    game.events.forEach(event=>{if(event.position)game.lastPositions[event.playerId]=event.position;});
+    return game;
+  }
+
+  function rebuildLastPositions(game){
+    game.lastPositions={};
+    [...game.events].sort((a,b)=>a.createdAt-b.createdAt).forEach(event=>{if(event.position)game.lastPositions[event.playerId]=event.position;});
   }
 
   function playerForNewEvaluation(player){
@@ -444,12 +618,19 @@
       st.evaluationDate=validDate(parsed.evaluationDate)?parsed.evaluationDate:todayLocalISO();
       st.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
       st.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
+      st.appView=parsed.appView==='gameReview'?'gameReview':'evaluation';
+      if(Array.isArray(parsed.gameReviews)&&parsed.gameReviews.length){
+        const selected=parsed.gameReviews.find(game=>game&&game.id===parsed.currentGameId)||parsed.gameReviews[0];
+        st.gameReviews=[sanitizeGame(selected)];
+      }
+      st.currentGameId=st.gameReviews[0].id;
       return st;
     }catch(e){return defaultState();}
   }
 
   let state=loadState();
   const timer={route:'home1',running:false,startedAt:0,elapsedMs:0,frame:0};
+  const reviewUi={inning:'1',pitcherId:'',editingEventId:'',editType:'',selectedPlayerId:''};
 
   const $=s=>document.querySelector(s);
   const $$=s=>Array.from(document.querySelectorAll(s));
@@ -562,6 +743,188 @@
     return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  function currentGame(){
+    return state.gameReviews.find(game=>game.id===state.currentGameId)||state.gameReviews[0];
+  }
+
+  function playerName(playerId){
+    const index=Number(String(playerId).slice(1));
+    const player=state.players[index];
+    return player?(player.name||('Player '+(index+1))):'Unknown player';
+  }
+
+  function setOptions(select,options,value){
+    select.innerHTML=options.map(option=>`<option value="${escapeAttr(option.value)}">${escapeAttr(option.label)}</option>`).join('');
+    select.value=options.some(option=>option.value===value)?value:options[0].value;
+  }
+
+  function ordinalInning(value){
+    const n=Number(value),mod100=n%100;
+    const suffix=mod100>=11&&mod100<=13?'th':n%10===1?'st':n%10===2?'nd':n%10===3?'rd':'th';
+    return n+suffix;
+  }
+
+  function scheduledPosition(game,playerId,inning){
+    return game.lineupByInning&&game.lineupByInning[inning]?game.lineupByInning[inning][playerId]||'':'';
+  }
+
+  function syncScheduledPitcher(){
+    const game=currentGame();
+    const pitcher=(game.activePlayerIds||[]).find(playerId=>scheduledPosition(game,playerId,reviewUi.inning)==='P');
+    if(pitcher)reviewUi.pitcherId=pitcher;
+  }
+
+  function renderReview(){
+    if(!state.gameReviews.length){const game=blankGame();state.gameReviews=[game];state.currentGameId=game.id;}
+    const game=currentGame();
+    $('#gameDate').value=game.date;
+    setOptions($('#reviewInning'),innings.map(value=>({value,label:ordinalInning(value)})),reviewUi.inning);
+    syncScheduledPitcher();
+    setOptions($('#reviewPitcher'),[{value:'',label:'Not selected'},...state.players.map((player,index)=>({value:'p'+index,label:player.name||('Player '+(index+1))}))],reviewUi.pitcherId);
+
+    const roster=$('#reviewRoster');roster.innerHTML='';
+    const activeIds=game.activePlayerIds&&game.activePlayerIds.length?game.activePlayerIds:state.players.map((_,index)=>'p'+index);
+    activeIds.forEach(playerId=>{
+      const index=Number(playerId.slice(1)),player=state.players[index],button=document.createElement('button');
+      button.type='button';button.className='review-player';button.dataset.playerId=playerId;
+      const scheduled=scheduledPosition(game,playerId,reviewUi.inning),positionLabel=scheduled==='X'?'Sitting':scheduled||game.lastPositions[playerId]||'Position not set';
+      button.innerHTML=escapeAttr((player.jersey?'#'+player.jersey+' ':'')+(player.name||('Player '+(index+1))))+'<span>'+escapeAttr(positionLabel)+'</span>';
+      roster.appendChild(button);
+    });
+    renderReviewSummaries(game.events);
+    renderEventLog(game.events);
+    $('#reviewStatus').textContent=game.events.length+' event'+(game.events.length===1?'':'s')+' in current game • autosaved locally';
+  }
+
+  function renderReviewSummaries(events){
+    const total=GameReviewCore.summarize(events);
+    const pct=total.roc===null?'—':Math.round(total.roc*100)+'%';
+    $('#teamSummary').innerHTML=`
+      <div class="summary-cards">
+        <div class="summary-card"><strong>${total.RO}</strong><span>RO Opportunities</span></div>
+        <div class="summary-card"><strong>${total.routineOutsConverted}</strong><span>Converted</span></div>
+        <div class="summary-card"><strong>${pct}</strong><span>ROC %</span></div>
+        <div class="summary-card"><strong>${total.missedRoutineOuts}</strong><span>Missed RO</span></div>
+        <div class="summary-card"><strong>${total.XA}</strong><span>Extra Advances</span></div>
+        <div class="summary-card"><strong>${total.COV}</strong><span>Coverage</span></div>
+        <div class="summary-card"><strong>${total.PLUS}</strong><span>Excellent Plays</span></div>
+      </div>
+      <div class="breakdown"><span>Fielding: ${total['MRO-F']}</span><span>Decision/Hesitation: ${total['MRO-D']}</span><span>Throwing: ${total['MRO-T']}</span><span>Range/Positioning: ${total['MRO-R']}</span><span>1B Reception: ${total['MRO-1B']}</span></div>`;
+
+    const summaries=GameReviewCore.summarizeByPlayer(events),body=$('#playerSummaryBody');body.innerHTML='';
+    Object.keys(summaries).sort((a,b)=>Number(a.slice(1))-Number(b.slice(1))).forEach(playerId=>{
+      const row=summaries[playerId],tr=document.createElement('tr');
+      tr.innerHTML=`<td>${escapeAttr(playerName(playerId))}</td><td>${escapeAttr(row.positions.join(', ')||'—')}</td><td>${row.RO}</td><td>${row.routineOutsConverted}</td><td>${row['MRO-F']}</td><td>${row['MRO-D']}</td><td>${row['MRO-T']}</td><td>${row['MRO-R']}</td><td>${row['MRO-1B']}</td><td>${row.XA}</td><td>${row.COV}</td><td>${row.PLUS}</td><td>${row.roc===null?'—':Math.round(row.roc*100)+'%'}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length)body.innerHTML='<tr><td colspan="13" class="muted">No matching defensive events yet.</td></tr>';
+  }
+
+  function renderEventLog(events){
+    const log=$('#eventLog');log.innerHTML='';
+    [...events].sort((a,b)=>b.createdAt-a.createdAt).forEach(event=>{
+      const row=document.createElement('div');row.className='event-row';
+      row.innerHTML=`<div class="event-main">${escapeAttr(ordinalInning(event.inning))} — ${escapeAttr(playerName(event.playerId))} — ${escapeAttr(event.position||'No position')} — ${escapeAttr(event.eventType)}</div>${event.note?'<div class="event-note">'+escapeAttr(event.note)+'</div>':''}<div class="event-actions"><button class="btn" type="button" data-edit-event="${escapeAttr(event.id)}" data-event-game="${escapeAttr(event.gameId)}">Edit</button><button class="btn danger" type="button" data-delete-event="${escapeAttr(event.id)}" data-event-game="${escapeAttr(event.gameId)}">Delete</button></div>`;
+      log.appendChild(row);
+    });
+    if(!log.children.length)log.innerHTML='<div class="notice">No matching events yet. Tap a player above to log one.</div>';
+  }
+
+  function openEventSheet(playerId,event=null){
+    const game=event?state.gameReviews.find(item=>item.id===event.gameId):currentGame();
+    if(event&&game){state.currentGameId=game.id;}
+    reviewUi.selectedPlayerId=playerId;reviewUi.editingEventId=event?event.id:'';reviewUi.editType=event?event.eventType:'';
+    $('#eventSheetTitle').textContent=event?'Edit Event':'Log Defensive Event';
+    $('#eventPlayerLabel').textContent=playerName(playerId);
+    setOptions($('#eventInning'),innings.map(value=>({value,label:ordinalInning(value)})),event?event.inning:reviewUi.inning);
+    const scheduled=scheduledPosition(currentGame(),playerId,reviewUi.inning);
+    const preferred=event?event.position:(positions.includes(scheduled)?scheduled:(currentGame().lastPositions[playerId]||''));
+    setOptions($('#eventPosition'),[{value:'',label:'Select position'},...positions.map(value=>({value,label:value}))],preferred);
+    $('#eventNote').value=event?event.note:'';
+    $('#saveEventEdit').classList.toggle('hidden',!event);
+    $$('#eventButtons .event-button').forEach(button=>button.classList.toggle('on',button.dataset.eventType===reviewUi.editType));
+    $('#eventSheetBackdrop').classList.remove('hidden');
+  }
+
+  function closeEventSheet(){
+    $('#eventSheetBackdrop').classList.add('hidden');reviewUi.editingEventId='';reviewUi.editType='';reviewUi.selectedPlayerId='';
+  }
+
+  function eventDraft(type){
+    const position=$('#eventPosition').value;
+    if(!position){$('#eventPosition').focus();return null;}
+    return {playerId:reviewUi.selectedPlayerId,inning:$('#eventInning').value,position,eventType:type,note:$('#eventNote').value.trim(),pitcherId:reviewUi.pitcherId};
+  }
+
+  function addReviewEvent(type){
+    const draft=eventDraft(type);if(!draft)return;
+    const game=currentGame(),event=Object.assign({id:makeId('event'),gameId:game.id,category:'defense',createdAt:Date.now()},draft);
+    game.events.push(event);game.lastPositions[event.playerId]=event.position;setLineupPosition(game,event.playerId,event.inning,event.position);reviewUi.inning=event.inning;
+    saveState();closeEventSheet();renderReview();
+  }
+
+  function setLineupPosition(game,playerId,inning,position){
+    if(!game.lineupByInning[inning])game.lineupByInning[inning]={};
+    game.lineupByInning[inning][playerId]=position;
+  }
+
+  function parseCsv(text){
+    const rows=[];let row=[],field='',quoted=false;
+    for(let i=0;i<text.length;i++){
+      const char=text[i],next=text[i+1];
+      if(char==='"'&&quoted&&next==='"'){field+='"';i++;}
+      else if(char==='"')quoted=!quoted;
+      else if(char===','&&!quoted){row.push(field);field='';}
+      else if((char==='\n'||char==='\r')&&!quoted){
+        if(char==='\r'&&next==='\n')i++;
+        row.push(field);if(row.some(value=>String(value).trim()))rows.push(row);row=[];field='';
+      }else field+=char;
+    }
+    row.push(field);if(row.some(value=>String(value).trim()))rows.push(row);
+    return rows;
+  }
+
+  function csvDateToIso(value){
+    const raw=String(value||'').trim();if(validDate(raw))return raw;
+    const match=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);if(!match)return '';
+    let year=Number(match[3]);if(year<100)year+=2000;
+    return `${year}-${String(Number(match[1])).padStart(2,'0')}-${String(Number(match[2])).padStart(2,'0')}`;
+  }
+
+  async function importDefenseCsv(file){
+    const rows=parseCsv(await file.text());if(rows.length<2)throw new Error('No player rows found');
+    const headers=rows[0].map(value=>String(value).trim().toLowerCase());
+    const required=['date','number','player first','player last','1','2','3','4','5','6','7'];
+    const indexes=Object.fromEntries(required.map(header=>[header,headers.indexOf(header)]));
+    if(required.some(header=>indexes[header]<0))throw new Error('Missing required columns');
+    const records=rows.slice(1).map(row=>({
+      date:String(row[indexes.date]||'').trim(),number:String(row[indexes.number]||'').trim().replace(/^#/,'').trim(),
+      first:String(row[indexes['player first']]||'').trim(),last:String(row[indexes['player last']]||'').trim(),
+      positions:Object.fromEntries(innings.slice(0,7).map(inning=>[inning,String(row[indexes[inning]]||'').trim().toUpperCase()]))
+    })).filter(record=>record.number||record.first||record.last).slice(0,12);
+    if(!records.length)throw new Error('No player rows found');
+    const importedDate=csvDateToIso(records.find(record=>record.date)?.date),game=currentGame();
+    if(game.events.length&&importedDate&&importedDate!==game.date&&!confirm('This CSV is for a different date. Replace the current game and clear its logged events?'))return false;
+    if(game.events.length&&importedDate&&importedDate!==game.date){game.events=[];game.lastPositions={};}
+    const used=new Set(),activePlayerIds=[];game.lineupByInning={};
+    innings.slice(0,7).forEach(inning=>{game.lineupByInning[inning]={};});
+    records.forEach(record=>{
+      let index=state.players.findIndex((player,i)=>!used.has(i)&&record.number&&String(player.jersey).replace(/^#/,'')===record.number);
+      if(index<0)index=state.players.findIndex((player,i)=>!used.has(i)&&record.first&&String(player.name).toLowerCase()===record.first.toLowerCase());
+      if(index<0)index=state.players.findIndex((_,i)=>!used.has(i));
+      if(index<0)return;used.add(index);
+      const playerId='p'+index,player=state.players[index];player.jersey=record.number;player.name=[record.first,record.last].filter(Boolean).join(' ');
+      activePlayerIds.push(playerId);
+      innings.slice(0,7).forEach(inning=>{
+        const value=record.positions[inning];if(positions.includes(value)||value==='X')game.lineupByInning[inning][playerId]=value;
+      });
+    });
+    game.activePlayerIds=activePlayerIds;if(importedDate)game.date=importedDate;
+    reviewUi.inning='1';reviewUi.pitcherId='';saveState();render();
+    const status=$('#defenseImportStatus');status.textContent=`Imported ${activePlayerIds.length} player${activePlayerIds.length===1?'':'s'} and seven defensive innings.`;status.classList.remove('hidden');
+    return true;
+  }
+
   function renderPlayers(){
     const bar=$('#playerbar');bar.innerHTML='';
     state.players.forEach((p,i)=>{
@@ -621,9 +984,14 @@
     $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===state.activeTab));
     $$('.section').forEach(s=>s.classList.toggle('active',s.id===state.activeTab));
 
+    $$('.app-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===state.appView));
+    $('#evaluationView').classList.toggle('hidden',state.appView!=='evaluation');
+    $('#gameReviewView').classList.toggle('hidden',state.appView!=='gameReview');
+
     renderPlayers();
     updateTimerDisplay();
     $('#status').textContent=(p.name||'Player '+(state.current+1))+' • autosaved locally';
+    if(state.appView==='gameReview')renderReview();
   }
 
   function bindInput(id,key){
@@ -709,6 +1077,22 @@
     );
   }
 
+  async function exportReviewCsv(){
+    const headers=['Game Date','Inning','Player','Jersey #','Position','Event Type','Note','Pitcher','Created At'];
+    const rows=[];
+    state.gameReviews.forEach(game=>game.events.forEach(event=>{
+      const player=state.players[Number(event.playerId.slice(1))]||{};
+      rows.push([game.date,event.inning,playerName(event.playerId),player.jersey||'',event.position,event.eventType,event.note,event.pitcherId?playerName(event.pitcherId):'',new Date(event.createdAt).toISOString()].map(csvEscape).join(','));
+    }));
+    await shareOrDownload(
+      `game-review-events-${todayLocalISO()}.csv`,
+      [headers.join(','),...rows].join('\n'),
+      'text/csv;charset=utf-8',
+      'Game events CSV sent to the share sheet.',
+      'Game events CSV downloaded.'
+    );
+  }
+
   async function exportJson(){
     await shareOrDownload(
       datedExportFilename('json'),
@@ -724,6 +1108,56 @@
   }
 
   buildChips();buildStars();
+  Object.keys(reviewEventLabels).forEach(type=>{
+    const button=document.createElement('button');button.type='button';button.dataset.eventType=type;
+    button.className='event-button'+(type==='RO'||type==='PLUS'?' positive':'')+(GameReviewCore.isMro(type)?' missed':'');
+    button.innerHTML='<strong>'+escapeAttr(type)+'</strong><br><span class="small">'+escapeAttr(reviewEventLabels[type])+'</span>';
+    $('#eventButtons').appendChild(button);
+  });
+
+  $$('.app-tab').forEach(tab=>tab.addEventListener('click',()=>{
+    state.appView=tab.dataset.view;saveState();render();
+  }));
+
+  $('#gameDate').addEventListener('input',e=>{if(validDate(e.target.value)){currentGame().date=e.target.value;saveState();renderReview();}});
+  $('#importDefenseBtn').addEventListener('click',()=>$('#importDefenseCsv').click());
+  $('#importDefenseCsv').addEventListener('change',async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    try{await importDefenseCsv(file);}
+    catch(error){const status=$('#defenseImportStatus');status.textContent='Could not import that CSV. Use columns: Date, Number, Player First, Player Last, 1, 2, 3, 4, 5, 6, 7.';status.classList.remove('hidden');}
+    finally{e.target.value='';}
+  });
+  $('#reviewInning').addEventListener('change',e=>{reviewUi.inning=e.target.value;reviewUi.pitcherId='';renderReview();});
+  $('#reviewPitcher').addEventListener('change',e=>{reviewUi.pitcherId=e.target.value;});
+  $('#reviewRoster').addEventListener('click',e=>{const button=e.target.closest('[data-player-id]');if(button)openEventSheet(button.dataset.playerId);});
+  $('#closeEventSheet').addEventListener('click',closeEventSheet);
+  $('#eventSheetBackdrop').addEventListener('click',e=>{if(e.target===$('#eventSheetBackdrop'))closeEventSheet();});
+  $('#eventButtons').addEventListener('click',e=>{
+    const button=e.target.closest('[data-event-type]');if(!button)return;
+    if(reviewUi.editingEventId){reviewUi.editType=button.dataset.eventType;$$('#eventButtons .event-button').forEach(item=>item.classList.toggle('on',item===button));return;}
+    addReviewEvent(button.dataset.eventType);
+  });
+  $('#saveEventEdit').addEventListener('click',()=>{
+    const draft=eventDraft(reviewUi.editType);if(!draft||!reviewUi.editType)return;
+    let found=null,game=null;
+    state.gameReviews.some(item=>{const event=item.events.find(candidate=>candidate.id===reviewUi.editingEventId);if(event){found=event;game=item;return true;}return false;});
+    if(!found)return;
+    Object.assign(found,draft);rebuildLastPositions(game);setLineupPosition(game,found.playerId,found.inning,found.position);reviewUi.inning=found.inning;
+    saveState();closeEventSheet();renderReview();
+  });
+  $('#updatePositionOnly').addEventListener('click',()=>{
+    const position=$('#eventPosition').value,inning=$('#eventInning').value;if(!position){$('#eventPosition').focus();return;}
+    const game=currentGame();setLineupPosition(game,reviewUi.selectedPlayerId,inning,position);game.lastPositions[reviewUi.selectedPlayerId]=position;reviewUi.inning=inning;
+    saveState();closeEventSheet();renderReview();
+  });
+  $('#eventLog').addEventListener('click',e=>{
+    const edit=e.target.closest('[data-edit-event]'),del=e.target.closest('[data-delete-event]');
+    const button=edit||del;if(!button)return;
+    const game=state.gameReviews.find(item=>item.id===button.dataset.eventGame),event=game&&game.events.find(item=>item.id===(edit?edit.dataset.editEvent:del.dataset.deleteEvent));
+    if(!event)return;
+    if(edit){openEventSheet(event.playerId,event);return;}
+    if(confirm('Delete this '+event.eventType+' event for '+playerName(event.playerId)+'?')){game.events=game.events.filter(item=>item.id!==event.id);rebuildLastPositions(game);saveState();renderReview();}
+  });
 
   [
     ['#jersey','jersey'],['#playerName','name'],['#age','age'],['#notes','notes']
@@ -842,6 +1276,7 @@
   });
   $('#closeBackup').addEventListener('click',()=>$('#backupPanel').classList.add('hidden'));
   $('#exportCsv').addEventListener('click',exportCsv);
+  $('#exportReviewCsv').addEventListener('click',exportReviewCsv);
   $('#exportJson').addEventListener('click',exportJson);
   $('#importJsonBtn').addEventListener('click',()=>$('#importJson').click());
 
@@ -855,6 +1290,12 @@
       restored.evaluationDate=validDate(parsed.evaluationDate)?parsed.evaluationDate:todayLocalISO();
       restored.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
       restored.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
+      restored.appView=parsed.appView==='gameReview'?'gameReview':'evaluation';
+      if(Array.isArray(parsed.gameReviews)&&parsed.gameReviews.length){
+        const selected=parsed.gameReviews.find(game=>game&&game.id===parsed.currentGameId)||parsed.gameReviews[0];
+        restored.gameReviews=[sanitizeGame(selected)];
+      }
+      restored.currentGameId=restored.gameReviews[0].id;
       state=restored;saveState();render();showBackupStatus('Backup restored successfully.');
     }catch(err){
       showBackupStatus('Could not restore that file. Please choose a backup created by this app.');

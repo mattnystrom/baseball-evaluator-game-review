@@ -491,9 +491,9 @@
   const years=['0','1','2','3','4','5+'];
   const ratingNames=['','Beginner','Developing','Competent','Strong','Standout'];
   const innings=Array.from({length:9},(_,i)=>String(i+1));
-  const reviewEventLabels={
-    RO:'Routine Out Made','MRO-F':'Missed Out: Fielding','MRO-D':'Missed Out: Decision',
-    'MRO-T':'Missed Out: Throw','MRO-R':'Missed Out: Range','MRO-1B':'Missed Out: 1B Reception (1B only)',
+  const reviewEventButtonLabels={
+    RO:'Routine Out','MRO-F':'MRO-Fielding','MRO-D':'MRO-Decision',
+    'MRO-T':'MRO-Throw','MRO-R':'MRO-Range','MRO-1B':'MRO-1B Reception (1B Only)',
     XA:'Extra Advance',COV:'Coverage Mistake',PLUS:'Excellent Play'
   };
 
@@ -761,6 +761,16 @@
     return player?(player.name||('Player '+(index+1))):'Unknown player';
   }
 
+  function comparePlayersByFirstName(a,b){
+    const aIndex=Number(a.slice(1)),bIndex=Number(b.slice(1));
+    const aName=String(state.players[aIndex]?.name||'').trim(),bName=String(state.players[bIndex]?.name||'').trim();
+    if(!aName&&!bName)return aIndex-bIndex;
+    if(!aName)return 1;
+    if(!bName)return -1;
+    const aFirst=aName.split(/\s+/)[0],bFirst=bName.split(/\s+/)[0];
+    return aFirst.localeCompare(bFirst,undefined,{sensitivity:'base',numeric:true})||aName.localeCompare(bName,undefined,{sensitivity:'base',numeric:true})||aIndex-bIndex;
+  }
+
   function setOptions(select,options,value){
     select.innerHTML=options.map(option=>`<option value="${escapeAttr(option.value)}">${escapeAttr(option.label)}</option>`).join('');
     select.value=options.some(option=>option.value===value)?value:options[0].value;
@@ -791,7 +801,7 @@
     setOptions($('#reviewPitcher'),[{value:'',label:'Not selected'},...state.players.map((player,index)=>({value:'p'+index,label:player.name||('Player '+(index+1))}))],reviewUi.pitcherId);
 
     const roster=$('#reviewRoster');roster.innerHTML='';
-    const activeIds=game.activePlayerIds&&game.activePlayerIds.length?game.activePlayerIds:state.players.map((_,index)=>'p'+index);
+    const activeIds=(game.activePlayerIds&&game.activePlayerIds.length?game.activePlayerIds:state.players.map((_,index)=>'p'+index)).slice().sort(comparePlayersByFirstName);
     activeIds.forEach(playerId=>{
       const index=Number(playerId.slice(1)),player=state.players[index],button=document.createElement('button');
       button.type='button';button.className='review-player';button.dataset.playerId=playerId;
@@ -1128,10 +1138,10 @@
   }
 
   buildChips();buildStars();
-  Object.keys(reviewEventLabels).forEach(type=>{
+  Object.keys(reviewEventButtonLabels).forEach(type=>{
     const button=document.createElement('button');button.type='button';button.dataset.eventType=type;
     button.className='event-button'+(type==='RO'||type==='PLUS'?' positive':'')+(GameReviewCore.isMro(type)?' missed':'');
-    button.innerHTML='<strong>'+escapeAttr(type)+'</strong><br><span class="small">'+escapeAttr(reviewEventLabels[type])+'</span>';
+    button.textContent=reviewEventButtonLabels[type];
     $('#eventButtons').appendChild(button);
   });
 

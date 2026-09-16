@@ -247,10 +247,9 @@
 
     <section id="backupPanel" class="card hidden">
       <div class="section-title">Backup & Export</div>
-      <div class="section-sub">CSV is best for Excel. JSON preserves the full app state for restoring later.</div>
+      <div class="section-sub" id="backupContext">CSV exports the current tab. JSON preserves the full app state for restoring later.</div>
       <div class="backup-grid">
         <button class="btn primary" id="exportCsv" type="button">Share / Export CSV</button>
-        <button class="btn" id="exportReviewCsv" type="button">Export Game Events CSV</button>
         <button class="btn" id="exportJson" type="button">Share / Save Backup</button>
         <button class="btn" id="importJsonBtn" type="button">Restore Backup</button>
         <button class="btn" id="closeBackup" type="button">Done</button>
@@ -1123,6 +1122,10 @@
     );
   }
 
+  function exportCurrentCsv(){
+    return state.appView==='gameReview'?exportReviewCsv():exportCsv();
+  }
+
   async function exportJson(){
     await shareOrDownload(
       datedExportFilename('json'),
@@ -1137,6 +1140,11 @@
     const box=$('#backupStatus');box.textContent=msg;box.classList.remove('hidden');
   }
 
+  function updateBackupContext(){
+    const label=state.appView==='gameReview'?'Game Review events':'Player Evaluation data';
+    $('#backupContext').textContent=`CSV will export ${label} from the current tab. JSON preserves the full app state for restoring later.`;
+  }
+
   buildChips();buildStars();
   Object.keys(reviewEventButtonLabels).forEach(type=>{
     const button=document.createElement('button');button.type='button';button.dataset.eventType=type;
@@ -1146,7 +1154,7 @@
   });
 
   $$('.app-tab').forEach(tab=>tab.addEventListener('click',()=>{
-    state.appView=tab.dataset.view;saveState();render();
+    state.appView=tab.dataset.view;updateBackupContext();saveState();render();
   }));
 
   $('#gameDate').addEventListener('input',e=>{if(validDate(e.target.value)){currentGame().date=e.target.value;saveState();renderReview();}});
@@ -1315,11 +1323,10 @@
   });
 
   $('#backupBtn').addEventListener('click',()=>{
-    $('#backupPanel').classList.toggle('hidden');$('#rosterPanel').classList.add('hidden');
+    updateBackupContext();$('#backupPanel').classList.toggle('hidden');$('#rosterPanel').classList.add('hidden');
   });
   $('#closeBackup').addEventListener('click',()=>$('#backupPanel').classList.add('hidden'));
-  $('#exportCsv').addEventListener('click',exportCsv);
-  $('#exportReviewCsv').addEventListener('click',exportReviewCsv);
+  $('#exportCsv').addEventListener('click',exportCurrentCsv);
   $('#exportJson').addEventListener('click',exportJson);
   $('#importJsonBtn').addEventListener('click',()=>$('#importJson').click());
 

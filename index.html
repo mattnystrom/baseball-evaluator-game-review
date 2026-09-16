@@ -47,6 +47,7 @@
     }
     .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
     @media (prefers-color-scheme: dark){.btn.primary{color:#102015}}
+    .btn.primary.white-text{color:#fff}
     .btn.danger{color:var(--danger)}
     .card{
       background:var(--card);border:1px solid var(--border);border-radius:15px;
@@ -158,6 +159,9 @@
     }
     .nav .new-evaluation{background:var(--accent);color:#fff;border-color:transparent}
     @media (prefers-color-scheme: dark){.nav .new-evaluation{color:#102015}}
+    .review-actions{display:flex;justify-content:flex-end;margin-top:13px}
+    .review-actions .new-evaluation{min-width:min(100%,260px);background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.review-actions .new-evaluation{color:#102015}}
     .status{text-align:center;padding:8px;font-size:12px;color:var(--muted)}
     .roster-table{display:grid;gap:8px}
     .roster-row{display:grid;grid-template-columns:70px minmax(0,1fr) 70px;gap:8px}
@@ -401,7 +405,7 @@
         <div class="section-sub">Import the defensive script, then log coaching observations in two taps. Every event autosaves on this device.</div>
         <div class="game-meta">
           <div><label for="gameDate">Date</label><input id="gameDate" type="date"></div>
-          <button class="btn primary" id="importDefenseBtn" type="button">Import Defense CSV</button>
+          <button class="btn primary white-text" id="importDefenseBtn" type="button">Import Defense CSV</button>
         </div>
         <input id="importDefenseCsv" class="file-input" type="file" accept=".csv,text/csv">
         <div id="defenseImportStatus" class="notice hidden"></div>
@@ -451,6 +455,9 @@
           <div><strong>PLUS</strong> — Excellent or above-routine play.</div>
         </div>
       </details>
+      <div class="review-actions">
+        <button id="newGameReview" class="btn new-evaluation" type="button">New Game Review</button>
+      </div>
       <div id="reviewStatus" class="status" aria-live="polite"></div>
     </section>
   </main>
@@ -1121,6 +1128,17 @@
 
   $('#gameDate').addEventListener('input',e=>{if(validDate(e.target.value)){currentGame().date=e.target.value;saveState();renderReview();}});
   $('#importDefenseBtn').addEventListener('click',()=>$('#importDefenseCsv').click());
+  $('#newGameReview').addEventListener('click',()=>{
+    if(!confirm('Start a new game review? The imported defensive lineup, position changes, and all logged game events will be cleared. Your roster and player evaluations will stay. Export the game events first if you want to keep them.'))return;
+    closeEventSheet();
+    const game=blankGame();
+    state.gameReviews=[game];state.currentGameId=game.id;
+    reviewUi.inning='1';reviewUi.pitcherId='';reviewUi.editingEventId='';reviewUi.editType='';reviewUi.selectedPlayerId='';
+    $('#importDefenseCsv').value='';
+    $('#defenseImportStatus').classList.add('hidden');
+    saveState();renderReview();
+    $('#reviewStatus').textContent='New game review started • roster and player evaluations preserved';
+  });
   $('#importDefenseCsv').addEventListener('change',async e=>{
     const file=e.target.files&&e.target.files[0];if(!file)return;
     try{await importDefenseCsv(file);}

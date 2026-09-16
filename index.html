@@ -199,6 +199,7 @@
     .event-button{min-height:56px;border:1px solid var(--border);border-radius:11px;background:var(--chip);color:var(--text);padding:8px;font-weight:900}
     .event-button.positive{background:var(--accent-soft);border-color:transparent}.event-button.missed{border-left:5px solid #c88a36}
     .event-button.on{box-shadow:0 0 0 3px var(--accent);border-color:var(--accent)}
+    .event-button:disabled{opacity:.45;cursor:not-allowed}
     .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:12px}
     .legend-grid strong{color:var(--accent)}
     @media(max-width:560px){
@@ -492,7 +493,7 @@
   const innings=Array.from({length:9},(_,i)=>String(i+1));
   const reviewEventLabels={
     RO:'Routine Out Made','MRO-F':'Missed Out: Fielding','MRO-D':'Missed Out: Decision',
-    'MRO-T':'Missed Out: Throw','MRO-R':'Missed Out: Range','MRO-1B':'Missed Out: 1B Reception',
+    'MRO-T':'Missed Out: Throw','MRO-R':'Missed Out: Range','MRO-1B':'Missed Out: 1B Reception (1B only)',
     XA:'Extra Advance',COV:'Coverage Mistake',PLUS:'Excellent Play'
   };
 
@@ -850,7 +851,19 @@
     $('#eventNote').value=event?event.note:'';
     $('#saveEventEdit').classList.toggle('hidden',!event);
     $$('#eventButtons .event-button').forEach(button=>button.classList.toggle('on',button.dataset.eventType===reviewUi.editType));
+    updateEventTypeAvailability();
     $('#eventSheetBackdrop').classList.remove('hidden');
+  }
+
+  function updateEventTypeAvailability(){
+    const firstBaseOnly=$('#eventButtons [data-event-type="MRO-1B"]');
+    const available=$('#eventPosition').value==='1B';
+    firstBaseOnly.disabled=!available;
+    firstBaseOnly.title=available?'':'Available only when the player is at 1B';
+    if(!available&&reviewUi.editType==='MRO-1B'){
+      reviewUi.editType='';
+      firstBaseOnly.classList.remove('on');
+    }
   }
 
   function closeEventSheet(){
@@ -1150,8 +1163,10 @@
   $('#reviewRoster').addEventListener('click',e=>{const button=e.target.closest('[data-player-id]');if(button)openEventSheet(button.dataset.playerId);});
   $('#closeEventSheet').addEventListener('click',closeEventSheet);
   $('#eventSheetBackdrop').addEventListener('click',e=>{if(e.target===$('#eventSheetBackdrop'))closeEventSheet();});
+  $('#eventPosition').addEventListener('change',updateEventTypeAvailability);
   $('#eventButtons').addEventListener('click',e=>{
     const button=e.target.closest('[data-event-type]');if(!button)return;
+    if(button.disabled)return;
     if(reviewUi.editingEventId){reviewUi.editType=button.dataset.eventType;$$('#eventButtons .event-button').forEach(item=>item.classList.toggle('on',item===button));return;}
     addReviewEvent(button.dataset.eventType);
   });
